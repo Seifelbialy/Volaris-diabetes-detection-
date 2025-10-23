@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Risk Assessment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .form-section {
+            padding: 2rem;
+        }
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .question-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        .form-check {
+            margin-bottom: 0.5rem;
+        }
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        .btn-predict {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 3rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        .result-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            display: none;
+        }
+        .risk-high {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        .risk-moderate {
+            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+        }
+        .risk-low {
+            background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);
+        }
+        .bmi-note {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            border-left: 4px solid #2196f3;
+        }
+        .loading {
+            display: none;
+        }
+        .spinner-border {
+            color: #667eea;
+        }
+        .question-card.required {
+            border-left: 5px solid #dc3545;
+        }
+        .question-card.required .question-title::after {
+            content: " *";
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .question-card.answered {
+            border-left: 5px solid #28a745;
+        }
+        .btn-predict:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .btn-predict:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="main-container">
+                    <div class="header">
+                        <h1><i class="fas fa-heartbeat me-3"></i>Diabetes Risk Assessment</h1>
+                        <p class="mb-0">Answer the questions below to get your personalized diabetes risk assessment</p>
+                        <div class="mt-3">
+                            <div class="progress" style="height: 8px;">
+                                <div id="progressBar" class="progress-bar bg-dark" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small id="progressText" class="text-light">0 of 21 questions answered</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <form id="diabetesForm">
+                            <!-- High Blood Pressure -->
+                            <div class="question-card">
+                                <div class="question-title">Do you have high blood pressure?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="HighBP" id="HighBP_0" value="0">
+                                    <label class="form-check-label" for="HighBP_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="HighBP" id="HighBP_1" value="1">
+                                    <label class="form-check-label" for="HighBP_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- High Cholesterol -->
+                            <div class="question-card">
+                                <div class="question-title">Do you have high cholesterol?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="HighChol" id="HighChol_0" value="0">
+                                    <label class="form-check-label" for="HighChol_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="HighChol" id="HighChol_1" value="1">
+                                    <label class="form-check-label" for="HighChol_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Cholesterol Check -->
+                            <div class="question-card">
+                                <div class="question-title">Have you had your cholesterol checked in the last 5 years?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="CholCheck" id="CholCheck_0" value="0">
+                                    <label class="form-check-label" for="CholCheck_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="CholCheck" id="CholCheck_1" value="1">
+                                    <label class="form-check-label" for="CholCheck_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- BMI -->
+                            <div class="question-card">
+                                <div class="question-title">What is your Body Mass Index (BMI)?</div>
+                                <div class="bmi-note">
+                                    <strong><i class="fas fa-calculator me-2"></i>BMI Calculator:</strong><br>
+                                    BMI = Weight (kg) ÷ Height (m)²<br>
+                                    <small>Or BMI = (Weight in pounds × 703) ÷ (Height in inches)²</small><br>
+                                    <small><strong>Categories:</strong> Underweight (<18.5), Normal (18.5-24.9), Overweight (25-29.9), Obese (≥30)</small>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="BMI" id="BMI_under" value="18">
+                                    <label class="form-check-label" for="BMI_under">Underweight (< 18.5)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="BMI" id="BMI_normal" value="22">
+                                    <label class="form-check-label" for="BMI_normal">Normal (18.5 - 24.9)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="BMI" id="BMI_over" value="27">
+                                    <label class="form-check-label" for="BMI_over">Overweight (25 - 29.9)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="BMI" id="BMI_obese" value="35">
+                                    <label class="form-check-label" for="BMI_obese">Obese (≥ 30)</label>
+                                </div>
+                            </div>
+
+                            <!-- Smoking -->
+                            <div class="question-card">
+                                <div class="question-title">Do you smoke cigarettes?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Smoker" id="Smoker_0" value="0">
+                                    <label class="form-check-label" for="Smoker_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Smoker" id="Smoker_1" value="1">
+                                    <label class="form-check-label" for="Smoker_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Stroke -->
+                            <div class="question-card">
+                                <div class="question-title">Have you ever had a stroke?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Stroke" id="Stroke_0" value="0">
+                                    <label class="form-check-label" for="Stroke_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Stroke" id="Stroke_1" value="1">
+                                    <label class="form-check-label" for="Stroke_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Heart Disease -->
+                            <div class="question-card">
+                                <div class="question-title">Have you ever had heart disease or a heart attack?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="HeartDiseaseorAttack" id="HeartDiseaseorAttack_0" value="0">
+                                    <label class="form-check-label" for="HeartDiseaseorAttack_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="HeartDiseaseorAttack" id="HeartDiseaseorAttack_1" value="1">
+                                    <label class="form-check-label" for="HeartDiseaseorAttack_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Physical Activity -->
+                            <div class="question-card">
+                                <div class="question-title">Do you engage in physical activity or exercise?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysActivity" id="PhysActivity_0" value="0">
+                                    <label class="form-check-label" for="PhysActivity_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysActivity" id="PhysActivity_1" value="1">
+                                    <label class="form-check-label" for="PhysActivity_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Fruits -->
+                            <div class="question-card">
+                                <div class="question-title">Do you consume fruits regularly?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Fruits" id="Fruits_0" value="0">
+                                    <label class="form-check-label" for="Fruits_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Fruits" id="Fruits_1" value="1">
+                                    <label class="form-check-label" for="Fruits_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Vegetables -->
+                            <div class="question-card">
+                                <div class="question-title">Do you consume vegetables regularly?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Veggies" id="Veggies_0" value="0">
+                                    <label class="form-check-label" for="Veggies_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Veggies" id="Veggies_1" value="1">
+                                    <label class="form-check-label" for="Veggies_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Heavy Alcohol -->
+                            <div class="question-card">
+                                <div class="question-title">Do you consume heavy amounts of alcohol?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="HvyAlcoholConsump" id="HvyAlcoholConsump_0" value="0">
+                                    <label class="form-check-label" for="HvyAlcoholConsump_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="HvyAlcoholConsump" id="HvyAlcoholConsump_1" value="1">
+                                    <label class="form-check-label" for="HvyAlcoholConsump_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Healthcare -->
+                            <div class="question-card">
+                                <div class="question-title">Do you have any kind of healthcare coverage?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="AnyHealthcare" id="AnyHealthcare_0" value="0">
+                                    <label class="form-check-label" for="AnyHealthcare_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="AnyHealthcare" id="AnyHealthcare_1" value="1">
+                                    <label class="form-check-label" for="AnyHealthcare_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- No Doctor Cost -->
+                            <div class="question-card">
+                                <div class="question-title">Was there a time in the past 12 months when you needed to see a doctor but could not because of cost?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="NoDocbcCost" id="NoDocbcCost_0" value="0">
+                                    <label class="form-check-label" for="NoDocbcCost_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="NoDocbcCost" id="NoDocbcCost_1" value="1">
+                                    <label class="form-check-label" for="NoDocbcCost_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- General Health -->
+                            <div class="question-card">
+                                <div class="question-title">How would you describe your general health?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="GenHlth" id="GenHlth_1" value="1">
+                                    <label class="form-check-label" for="GenHlth_1">Excellent</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="GenHlth" id="GenHlth_2" value="2">
+                                    <label class="form-check-label" for="GenHlth_2">Very Good</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="GenHlth" id="GenHlth_3" value="3">
+                                    <label class="form-check-label" for="GenHlth_3">Good</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="GenHlth" id="GenHlth_4" value="4">
+                                    <label class="form-check-label" for="GenHlth_4">Fair</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="GenHlth" id="GenHlth_5" value="5">
+                                    <label class="form-check-label" for="GenHlth_5">Poor</label>
+                                </div>
+                            </div>
+
+                            <!-- Mental Health -->
+                            <div class="question-card">
+                                <div class="question-title">How many days during the past 30 days was your mental health not good?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="MentHlth" id="MentHlth_0" value="0">
+                                    <label class="form-check-label" for="MentHlth_0">0 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="MentHlth" id="MentHlth_5" value="5">
+                                    <label class="form-check-label" for="MentHlth_5">1-5 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="MentHlth" id="MentHlth_10" value="10">
+                                    <label class="form-check-label" for="MentHlth_10">6-10 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="MentHlth" id="MentHlth_15" value="15">
+                                    <label class="form-check-label" for="MentHlth_15">11-15 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="MentHlth" id="MentHlth_20" value="20">
+                                    <label class="form-check-label" for="MentHlth_20">16-20 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="MentHlth" id="MentHlth_25" value="25">
+                                    <label class="form-check-label" for="MentHlth_25">21-25 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="MentHlth" id="MentHlth_30" value="30">
+                                    <label class="form-check-label" for="MentHlth_30">26-30 days</label>
+                                </div>
+                            </div>
+
+                            <!-- Physical Health -->
+                            <div class="question-card">
+                                <div class="question-title">How many days during the past 30 days was your physical health not good?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysHlth" id="PhysHlth_0" value="0">
+                                    <label class="form-check-label" for="PhysHlth_0">0 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysHlth" id="PhysHlth_5" value="5">
+                                    <label class="form-check-label" for="PhysHlth_5">1-5 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysHlth" id="PhysHlth_10" value="10">
+                                    <label class="form-check-label" for="PhysHlth_10">6-10 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysHlth" id="PhysHlth_15" value="15">
+                                    <label class="form-check-label" for="PhysHlth_15">11-15 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysHlth" id="PhysHlth_20" value="20">
+                                    <label class="form-check-label" for="PhysHlth_20">16-20 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysHlth" id="PhysHlth_25" value="25">
+                                    <label class="form-check-label" for="PhysHlth_25">21-25 days</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="PhysHlth" id="PhysHlth_30" value="30">
+                                    <label class="form-check-label" for="PhysHlth_30">26-30 days</label>
+                                </div>
+                            </div>
+
+                            <!-- Difficulty Walking -->
+                            <div class="question-card">
+                                <div class="question-title">Do you have serious difficulty walking or climbing stairs?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="DiffWalk" id="DiffWalk_0" value="0">
+                                    <label class="form-check-label" for="DiffWalk_0">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="DiffWalk" id="DiffWalk_1" value="1">
+                                    <label class="form-check-label" for="DiffWalk_1">Yes</label>
+                                </div>
+                            </div>
+
+                            <!-- Sex -->
+                            <div class="question-card">
+                                <div class="question-title">What is your biological sex?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Sex" id="Sex_0" value="0">
+                                    <label class="form-check-label" for="Sex_0">Female</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Sex" id="Sex_1" value="1">
+                                    <label class="form-check-label" for="Sex_1">Male</label>
+                                </div>
+                            </div>
+
+                            <!-- Age -->
+                            <div class="question-card">
+                                <div class="question-title">What is your age group?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_1" value="1">
+                                    <label class="form-check-label" for="Age_1">18-24 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_2" value="2">
+                                    <label class="form-check-label" for="Age_2">25-29 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_3" value="3">
+                                    <label class="form-check-label" for="Age_3">30-34 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_4" value="4">
+                                    <label class="form-check-label" for="Age_4">35-39 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_5" value="5">
+                                    <label class="form-check-label" for="Age_5">40-44 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_6" value="6">
+                                    <label class="form-check-label" for="Age_6">45-49 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_7" value="7">
+                                    <label class="form-check-label" for="Age_7">50-54 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_8" value="8">
+                                    <label class="form-check-label" for="Age_8">55-59 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_9" value="9">
+                                    <label class="form-check-label" for="Age_9">60-64 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_10" value="10">
+                                    <label class="form-check-label" for="Age_10">65-69 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_11" value="11">
+                                    <label class="form-check-label" for="Age_11">70-74 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_12" value="12">
+                                    <label class="form-check-label" for="Age_12">75-79 years</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Age" id="Age_13" value="13">
+                                    <label class="form-check-label" for="Age_13">80+ years</label>
+                                </div>
+                            </div>
+
+                            <!-- Education -->
+                            <div class="question-card">
+                                <div class="question-title">What is the highest grade or year of school you completed?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Education" id="Education_1" value="1">
+                                    <label class="form-check-label" for="Education_1">Never attended school or only kindergarten</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Education" id="Education_2" value="2">
+                                    <label class="form-check-label" for="Education_2">Grades 1 through 8 (Elementary)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Education" id="Education_3" value="3">
+                                    <label class="form-check-label" for="Education_3">Grades 9 through 11 (Some high school)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Education" id="Education_4" value="4">
+                                    <label class="form-check-label" for="Education_4">Grade 12 or GED (High school graduate)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Education" id="Education_5" value="5">
+                                    <label class="form-check-label" for="Education_5">College 1 year to 3 years (Some college or technical school)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Education" id="Education_6" value="6">
+                                    <label class="form-check-label" for="Education_6">College 4 years or more (College graduate)</label>
+                                </div>
+                            </div>
+
+                            <!-- Income -->
+                            <div class="question-card">
+                                <div class="question-title">What is your annual household income?</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Income" id="Income_1" value="1">
+                                    <label class="form-check-label" for="Income_1">Less than $10,000</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Income" id="Income_2" value="2">
+                                    <label class="form-check-label" for="Income_2">$10,000 to $14,999</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Income" id="Income_3" value="3">
+                                    <label class="form-check-label" for="Income_3">$15,000 to $19,999</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Income" id="Income_4" value="4">
+                                    <label class="form-check-label" for="Income_4">$20,000 to $24,999</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Income" id="Income_5" value="5">
+                                    <label class="form-check-label" for="Income_5">$25,000 to $34,999</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Income" id="Income_6" value="6">
+                                    <label class="form-check-label" for="Income_6">$35,000 to $49,999</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Income" id="Income_7" value="7">
+                                    <label class="form-check-label" for="Income_7">$50,000 to $74,999</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Income" id="Income_8" value="8">
+                                    <label class="form-check-label" for="Income_8">$75,000 or more</label>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-predict text-white">
+                                    <i class="fas fa-calculator me-2"></i>Get My Risk Assessment
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Loading Spinner -->
+                        <div class="loading text-center mt-4">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Analyzing your responses...</p>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="resultCard" class="result-card">
+                            <div class="text-center">
+                                <h3 id="riskLevel" class="mb-3"></h3>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card bg-light text-dark">
+                                            <div class="card-body">
+                                                <h5>Prediction</h5>
+                                                <p id="prediction" class="mb-0"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light text-dark">
+                                            <div class="card-body">
+                                                <h5>Confidence</h5>
+                                                <p id="confidence" class="mb-0"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <h5>Probabilities</h5>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="card bg-success text-white">
+                                                <div class="card-body text-center">
+                                                    <h6>No Diabetes</h6>
+                                                    <h4 id="noDiabetesProb"></h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="card bg-danger text-white">
+                                                <div class="card-body text-center">
+                                                    <h6>Diabetes Risk</h6>
+                                                    <h4 id="diabetesProb"></h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h5>Recommendation</h5>
+                                    <p id="recommendation" class="lead"></p>
+                                </div>
+                                <button class="btn btn-light mt-3" onclick="resetForm()">
+                                    <i class="fas fa-redo me-2"></i>Take Assessment Again
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('diabetesForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate that all questions are answered
+            const requiredFields = [
+                'HighBP', 'HighChol', 'CholCheck', 'BMI', 'Smoker', 'Stroke', 
+                'HeartDiseaseorAttack', 'PhysActivity', 'Fruits', 'Veggies', 
+                'HvyAlcoholConsump', 'AnyHealthcare', 'NoDocbcCost', 'GenHlth', 
+                'MentHlth', 'PhysHlth', 'DiffWalk', 'Sex', 'Age', 'Education', 'Income'
+            ];
+            
+            let allAnswered = true;
+            let missingFields = [];
+            
+            requiredFields.forEach(field => {
+                const fieldInputs = document.querySelectorAll(`input[name="${field}"]:checked`);
+                if (fieldInputs.length === 0) {
+                    allAnswered = false;
+                    missingFields.push(field);
+                }
+            });
+            
+            if (!allAnswered) {
+                alert('Please answer all questions before getting your risk assessment.');
+                // Scroll to first unanswered question
+                const firstMissingField = missingFields[0];
+                const firstMissingInput = document.querySelector(`input[name="${firstMissingField}"]`);
+                if (firstMissingInput) {
+                    firstMissingInput.closest('.question-card').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }
+                return;
+            }
+            
+            // Show loading
+            document.querySelector('.loading').style.display = 'block';
+            document.getElementById('resultCard').style.display = 'none';
+            
+            // Collect form data
+            const formData = new FormData(this);
+            
+            // Send to server
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading
+                document.querySelector('.loading').style.display = 'none';
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // Display results
+                const resultCard = document.getElementById('resultCard');
+                const riskLevel = document.getElementById('riskLevel');
+                const prediction = document.getElementById('prediction');
+                const confidence = document.getElementById('confidence');
+                const noDiabetesProb = document.getElementById('noDiabetesProb');
+                const diabetesProb = document.getElementById('diabetesProb');
+                const recommendation = document.getElementById('recommendation');
+                
+                // Set risk level and styling
+                riskLevel.textContent = data.risk_level;
+                if (data.risk_level.includes('High')) {
+                    resultCard.className = 'result-card risk-high';
+                } else if (data.risk_level.includes('Moderate')) {
+                    resultCard.className = 'result-card risk-moderate';
+                } else {
+                    resultCard.className = 'result-card risk-low';
+                }
+                
+                // Set content
+                prediction.textContent = data.prediction === 1 ? 'Diabetes Risk Detected' : 'No Diabetes Risk';
+                confidence.textContent = data.confidence + '%';
+                noDiabetesProb.textContent = data.probabilities.no_diabetes + '%';
+                diabetesProb.textContent = data.probabilities.diabetes + '%';
+                recommendation.textContent = data.recommendation;
+                
+                // Show results
+                resultCard.style.display = 'block';
+                resultCard.scrollIntoView({ behavior: 'smooth' });
+            })
+            .catch(error => {
+                document.querySelector('.loading').style.display = 'none';
+                alert('Error: ' + error);
+            });
+        });
+        
+        function resetForm() {
+            document.getElementById('diabetesForm').reset();
+            document.getElementById('resultCard').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            updateQuestionStates();
+        }
+        
+        function updateQuestionStates() {
+            const requiredFields = [
+                'HighBP', 'HighChol', 'CholCheck', 'BMI', 'Smoker', 'Stroke', 
+                'HeartDiseaseorAttack', 'PhysActivity', 'Fruits', 'Veggies', 
+                'HvyAlcoholConsump', 'AnyHealthcare', 'NoDocbcCost', 'GenHlth', 
+                'MentHlth', 'PhysHlth', 'DiffWalk', 'Sex', 'Age', 'Education', 'Income'
+            ];
+            
+            let answeredCount = 0;
+            
+            requiredFields.forEach(field => {
+                const questionCard = document.querySelector(`input[name="${field}"]`).closest('.question-card');
+                const fieldInputs = document.querySelectorAll(`input[name="${field}"]:checked`);
+                
+                // Remove existing classes
+                questionCard.classList.remove('required', 'answered');
+                
+                if (fieldInputs.length === 0) {
+                    questionCard.classList.add('required');
+                } else {
+                    questionCard.classList.add('answered');
+                    answeredCount++;
+                }
+            });
+            
+            // Update progress bar
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const percentage = (answeredCount / requiredFields.length) * 100;
+            
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = `${answeredCount} of ${requiredFields.length} questions answered`;
+            
+            // Enable/disable submit button based on completion
+            const submitButton = document.querySelector('button[type="submit"]');
+            if (answeredCount === requiredFields.length) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-calculator me-2"></i>Get My Risk Assessment';
+            } else {
+                submitButton.disabled = true;
+                submitButton.innerHTML = `<i class="fas fa-lock me-2"></i>Answer All Questions (${answeredCount}/${requiredFields.length})`;
+            }
+        }
+        
+        // Add event listeners to all radio buttons to update visual states
+        document.addEventListener('DOMContentLoaded', function() {
+            const allRadioButtons = document.querySelectorAll('input[type="radio"]');
+            allRadioButtons.forEach(radio => {
+                radio.addEventListener('change', updateQuestionStates);
+            });
+            
+            // Initial state update
+            updateQuestionStates();
+        });
+    </script>
+</body>
+</html>
+
